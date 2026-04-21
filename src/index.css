@@ -8,35 +8,44 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* PitchForge — dark-first SaaS theme */
+    --background: 232 35% 6%;
+    --foreground: 220 30% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 231 30% 9%;
+    --card-foreground: 220 30% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 231 30% 9%;
+    --popover-foreground: 220 30% 96%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 244 90% 66%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 268 92% 70%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 231 25% 14%;
+    --secondary-foreground: 220 30% 96%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 231 22% 13%;
+    --muted-foreground: 220 14% 64%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 268 92% 70%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 231 22% 17%;
+    --input: 231 22% 15%;
+    --ring: 244 90% 66%;
 
-    --radius: 0.5rem;
+    --radius: 0.85rem;
+
+    --gradient-primary: linear-gradient(135deg, hsl(244 90% 66%), hsl(268 92% 70%));
+    --gradient-hero: radial-gradient(60% 50% at 50% 0%, hsl(244 90% 66% / 0.35) 0%, transparent 70%), linear-gradient(180deg, hsl(232 40% 8%), hsl(232 35% 6%));
+    --gradient-card: linear-gradient(160deg, hsl(231 30% 11% / 0.9), hsl(231 30% 8% / 0.9));
+    --shadow-glow: 0 20px 60px -20px hsl(244 90% 66% / 0.5);
+    --shadow-elegant: 0 10px 40px -12px hsl(232 60% 2% / 0.6);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,7 +65,7 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 232 35% 6%;
     --foreground: 210 40% 98%;
 
     --card: 222.2 84% 4.9%;
