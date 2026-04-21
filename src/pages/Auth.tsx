@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
+import logoMark from "@/assets/pitchforge-mark.png";
 
 const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -21,9 +21,7 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center bg-gradient-hero p-4">
       <div className="w-full max-w-md animate-fade-in-up">
         <Link to="/" className="mb-8 flex items-center justify-center gap-2 font-display text-xl font-semibold">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </span>
+          <img src={logoMark} alt="PitchForge logo" width={36} height={36} className="h-9 w-9 object-contain" />
           PitchForge
         </Link>
 
