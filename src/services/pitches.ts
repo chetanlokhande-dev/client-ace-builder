@@ -1,5 +1,6 @@
 import { createRecord, deleteRecord, getAll, updateRecord } from "./db";
 import type { PitchData } from "@/components/pitchforge/PitchPreview";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface PitchFormInput {
   title: string;
@@ -17,7 +18,7 @@ export const savePitch = (userId: string, form: PitchFormInput, content: PitchDa
     description: form.description,
     details: form.details,
     links: form.links,
-    content: content as unknown as Record<string, unknown>,
+    content: content as unknown as Json,
   });
 
 export const listPitches = (userId: string) =>
