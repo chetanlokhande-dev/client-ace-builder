@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -31,7 +32,7 @@ export async function getAll<T extends TableName>(
   opts: ListOptions<T> = {},
 ): Promise<{ data: Row<T>[]; count: number | null }> {
   log("getAll", table, opts);
-  let query = supabase.from(table).select("*", { count: "exact" });
+  let query: any = (supabase.from(table as any) as any).select("*", { count: "exact" });
 
   if (opts.filters) {
     for (const [k, v] of Object.entries(opts.filters)) {
@@ -53,21 +54,21 @@ export async function getAll<T extends TableName>(
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { data: (data ?? []) as Row<T>[], count };
+  return { data: (data ?? []) as unknown as Row<T>[], count };
 }
 
 export async function getById<T extends TableName>(table: T, id: string): Promise<Row<T> | null> {
   log("getById", table, id);
-  const { data, error } = await supabase.from(table).select("*").eq("id", id).maybeSingle();
+  const { data, error } = await (supabase.from(table as any) as any).select("*").eq("id", id).maybeSingle();
   if (error) throw error;
-  return data as Row<T> | null;
+  return (data ?? null) as unknown as Row<T> | null;
 }
 
 export async function createRecord<T extends TableName>(table: T, values: Insert<T>): Promise<Row<T>> {
   log("create", table, values);
-  const { data, error } = await supabase.from(table).insert(values as never).select().single();
+  const { data, error } = await (supabase.from(table as any) as any).insert(values).select().single();
   if (error) throw error;
-  return data as Row<T>;
+  return data as unknown as Row<T>;
 }
 
 export async function updateRecord<T extends TableName>(
@@ -76,18 +77,17 @@ export async function updateRecord<T extends TableName>(
   values: Update<T>,
 ): Promise<Row<T>> {
   log("update", table, { id, values });
-  const { data, error } = await supabase
-    .from(table)
-    .update(values as never)
+  const { data, error } = await (supabase.from(table as any) as any)
+    .update(values)
     .eq("id", id)
     .select()
     .single();
   if (error) throw error;
-  return data as Row<T>;
+  return data as unknown as Row<T>;
 }
 
 export async function deleteRecord<T extends TableName>(table: T, id: string): Promise<void> {
   log("delete", table, id);
-  const { error } = await supabase.from(table).delete().eq("id", id);
+  const { error } = await (supabase.from(table as any) as any).delete().eq("id", id);
   if (error) throw error;
 }
