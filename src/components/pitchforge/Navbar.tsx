@@ -1,9 +1,17 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import logoMark from "@/assets/pitchforge-mark.png";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
@@ -18,10 +26,17 @@ const Navbar = () => {
         </nav>
         <div className="flex items-center gap-2">
           {pathname !== "/auth" && (
-            <>
-              <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
-              <Link to="/dashboard"><Button variant="hero" size="sm">Open app</Button></Link>
-            </>
+            user ? (
+              <>
+                <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
+                <Button variant="hero" size="sm" onClick={handleSignOut}>Sign out</Button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
+                <Link to="/dashboard"><Button variant="hero" size="sm">Open app</Button></Link>
+              </>
+            )
           )}
         </div>
       </div>

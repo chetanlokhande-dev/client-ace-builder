@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/pitchforge/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,12 +15,16 @@ import {
 } from "@/components/ui/select";
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import { generatePitch } from "@/lib/generatePitch";
-import { Download, Loader2, Share2, Sparkles } from "lucide-react";
+import { Download, Loader2, Save, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { savePitch } from "@/services/pitches";
 
 const INDUSTRIES = ["SaaS", "E-commerce", "Real Estate", "Startups", "Agencies"];
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -29,6 +34,7 @@ const Dashboard = () => {
   });
   const [pitch, setPitch] = useState<PitchData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
@@ -46,6 +52,25 @@ const Dashboard = () => {
     }, 900);
   };
 
+  const handleSave = async () => {
+    if (!pitch) return;
+    if (!user) {
+      toast.info("Sign in to save your pitch.");
+      navigate("/auth");
+      return;
+    }
+    setSaving(true);
+    try {
+      await savePitch(user.id, form, pitch);
+      toast.success("Pitch saved to your library.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not save pitch";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -56,6 +81,10 @@ const Dashboard = () => {
             <p className="mt-1 text-muted-foreground">Describe your portfolio, pick an industry, and generate.</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="hero" disabled={!pitch || saving} onClick={handleSave}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {user ? "Save pitch" : "Sign in to save"}
+            </Button>
             <Button variant="glass" disabled={!pitch} onClick={() => toast("Export coming soon")}> <Download className="h-4 w-4" /> Download PDF</Button>
             <Button variant="glass" disabled={!pitch} onClick={() => toast("Share link coming soon")}> <Share2 className="h-4 w-4" /> Share link</Button>
           </div>
