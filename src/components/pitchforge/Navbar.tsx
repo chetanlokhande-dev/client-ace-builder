@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import logoMark from "@/assets/pitchforge-mark.png";
 
 const Navbar = () => {
   const { pathname } = useLocation();
@@ -8,9 +8,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-semibold">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </span>
+          <img src={logoMark} alt="PitchForge logo" width={32} height={32} className="h-8 w-8 object-contain" />
           PitchForge
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">

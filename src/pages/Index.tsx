@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/pitchforge/Navbar";
 import Footer from "@/components/pitchforge/Footer";
-import heroImg from "@/assets/hero-pitch.jpg";
+import heroImg from "@/assets/hero-pitch.png";
 import { Check, FileText, Sparkles, Wand2, Zap, Target, Share2 } from "lucide-react";
 
 const features = [
