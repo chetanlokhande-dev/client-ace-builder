@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      pitch_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          pitch_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pitch_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pitch_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_bookmarks_pitch_id_fkey"
+            columns: ["pitch_id"]
+            isOneToOne: false
+            referencedRelation: "pitches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pitch_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          pitch_id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pitch_id: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pitch_id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_ratings_pitch_id_fkey"
+            columns: ["pitch_id"]
+            isOneToOne: false
+            referencedRelation: "pitches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pitches: {
         Row: {
           content: Json
@@ -22,7 +83,9 @@ export type Database = {
           details: string | null
           id: string
           industry: string
+          is_public: boolean
           links: string | null
+          share_token: string
           title: string
           updated_at: string
           user_id: string
@@ -34,7 +97,9 @@ export type Database = {
           details?: string | null
           id?: string
           industry: string
+          is_public?: boolean
           links?: string | null
+          share_token?: string
           title: string
           updated_at?: string
           user_id: string
@@ -46,7 +111,9 @@ export type Database = {
           details?: string | null
           id?: string
           industry?: string
+          is_public?: boolean
           links?: string | null
+          share_token?: string
           title?: string
           updated_at?: string
           user_id?: string
