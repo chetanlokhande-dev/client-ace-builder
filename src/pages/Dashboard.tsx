@@ -14,11 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
-import { generatePitch } from "@/lib/generatePitch";
 import { Download, Loader2, Save, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { savePitch } from "@/services/pitches";
+import { supabase } from "@/integrations/supabase/client";
 
 const INDUSTRIES = ["SaaS", "E-commerce", "Real Estate", "Startups", "Agencies"];
 
@@ -39,17 +39,28 @@ const Dashboard = () => {
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
-  const handleGenerate = () => {
-    if (!form.title && !form.description) {
-      toast.error("Add a title or description so we know what to pitch.");
+  const handleGenerate = async () => {
+    if (!form.title && !form.description && !form.details) {
+      toast.error("Add a title, description, or project details so we know what to pitch.");
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setPitch(generatePitch(form));
-      setLoading(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-pitch", {
+        body: form,
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      const generated = (data as { pitch?: PitchData })?.pitch;
+      if (!generated) throw new Error("No pitch returned");
+      setPitch(generated);
       toast.success("Your pitch is ready!");
-    }, 900);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not generate pitch";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -124,9 +135,9 @@ const Dashboard = () => {
               </div>
               <Button onClick={handleGenerate} variant="hero" size="lg" className="w-full" disabled={loading}>
                 {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Crafting your pitch…</>
                 ) : (
-                  <><Sparkles className="h-4 w-4" /> Generate pitch</>
+                  <><Sparkles className="h-4 w-4" /> Generate AI pitch</>
                 )}
               </Button>
             </div>
