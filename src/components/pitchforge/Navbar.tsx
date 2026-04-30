@@ -20,15 +20,26 @@ const Navbar = () => {
           PitchForge
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-          <a href="/#features" className="hover:text-foreground transition-colors">Features</a>
-          <a href="/#how" className="hover:text-foreground transition-colors">How it works</a>
-          <a href="/#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+          {user ? (
+            <>
+              <Link to="/dashboard" className="hover:text-foreground transition-colors">Studio</Link>
+              <Link to="/history" className="hover:text-foreground transition-colors">History</Link>
+              <Link to="/saved" className="hover:text-foreground transition-colors">Saved</Link>
+              <Link to="/community" className="hover:text-foreground transition-colors">Community</Link>
+              <Link to="/profile" className="hover:text-foreground transition-colors">Profile</Link>
+            </>
+          ) : (
+            <>
+              <a href="/#features" className="hover:text-foreground transition-colors">Features</a>
+              <Link to="/community" className="hover:text-foreground transition-colors">Community</Link>
+              <a href="/#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            </>
+          )}
         </nav>
         <div className="flex items-center gap-2">
           {pathname !== "/auth" && (
             user ? (
               <>
-                <Link to="/dashboard"><Button variant="ghost" size="sm">Dashboard</Button></Link>
                 <Button variant="hero" size="sm" onClick={handleSignOut}>Sign out</Button>
               </>
             ) : (

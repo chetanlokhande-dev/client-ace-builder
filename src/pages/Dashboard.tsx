@@ -14,11 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
+import PitchAssistant from "@/components/pitchforge/PitchAssistant";
 import { Download, Loader2, Save, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { savePitch } from "@/services/pitches";
 import { supabase } from "@/integrations/supabase/client";
+import { downloadPitchPdf } from "@/lib/pitchPdf";
+import { buildShareUrl, setPitchPublic } from "@/services/community";
 
 const INDUSTRIES = ["SaaS", "E-commerce", "Real Estate", "Startups", "Agencies"];
 
@@ -33,6 +36,8 @@ const Dashboard = () => {
     industry: "SaaS",
   });
   const [pitch, setPitch] = useState<PitchData | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedShareToken, setSavedShareToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -72,13 +77,42 @@ const Dashboard = () => {
     }
     setSaving(true);
     try {
-      await savePitch(user.id, form, pitch);
+      const row = await savePitch(user.id, form, pitch);
+      setSavedId((row as { id: string }).id);
+      setSavedShareToken((row as { share_token?: string }).share_token ?? null);
       toast.success("Pitch saved to your library.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not save pitch";
       toast.error(msg);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (pitch) downloadPitchPdf(pitch);
+  };
+
+  const handleShare = async () => {
+    if (!pitch) return;
+    if (!user) { toast.info("Sign in to share your pitch."); navigate("/auth"); return; }
+    try {
+      let token = savedShareToken;
+      let id = savedId;
+      if (!id) {
+        const row = await savePitch(user.id, form, pitch);
+        id = (row as { id: string }).id;
+        token = (row as { share_token: string }).share_token;
+        setSavedId(id);
+        setSavedShareToken(token);
+      }
+      if (id) await setPitchPublic(id, true);
+      if (token) {
+        await navigator.clipboard.writeText(buildShareUrl(token));
+        toast.success("Public share link copied");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not create share link");
     }
   };
 
@@ -96,8 +130,8 @@ const Dashboard = () => {
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {user ? "Save pitch" : "Sign in to save"}
             </Button>
-            <Button variant="glass" disabled={!pitch} onClick={() => toast("Export coming soon")}> <Download className="h-4 w-4" /> Download PDF</Button>
-            <Button variant="glass" disabled={!pitch} onClick={() => toast("Share link coming soon")}> <Share2 className="h-4 w-4" /> Share link</Button>
+            <Button variant="glass" disabled={!pitch} onClick={handleDownload}> <Download className="h-4 w-4" /> Download PDF</Button>
+            <Button variant="glass" disabled={!pitch} onClick={handleShare}> <Share2 className="h-4 w-4" /> Share link</Button>
           </div>
         </div>
 
@@ -149,6 +183,7 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+      <PitchAssistant currentPitch={pitch} industry={form.industry} onPitch={setPitch} />
     </div>
   );
 };
