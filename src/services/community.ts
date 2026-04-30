@@ -112,9 +112,9 @@ export const listMyBookmarks = async (userId: string) => {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? [])
-    .map((b: { pitches: PitchRow | null }) => b.pitches)
-    .filter(Boolean) as PitchRow[];
+  return ((data ?? []) as Array<{ pitches: unknown }>)
+    .map((b) => b.pitches as PitchRow | null)
+    .filter((p): p is PitchRow => Boolean(p));
 };
 
 export const getMyBookmarkIds = async (userId: string) => {
