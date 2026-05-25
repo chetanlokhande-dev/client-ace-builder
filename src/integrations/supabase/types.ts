@@ -144,12 +144,56 @@ export type Database = {
         }
         Relationships: []
       }
+      temp_pitches: {
+        Row: {
+          claim_email: string | null
+          content: Json
+          created_at: string
+          description: string | null
+          details: string | null
+          expires_at: string
+          id: string
+          industry: string
+          links: string | null
+          share_token: string
+          title: string
+        }
+        Insert: {
+          claim_email?: string | null
+          content: Json
+          created_at?: string
+          description?: string | null
+          details?: string | null
+          expires_at?: string
+          id?: string
+          industry: string
+          links?: string | null
+          share_token?: string
+          title: string
+        }
+        Update: {
+          claim_email?: string | null
+          content?: Json
+          created_at?: string
+          description?: string | null
+          details?: string | null
+          expires_at?: string
+          id?: string
+          industry?: string
+          links?: string | null
+          share_token?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_temp_pitch: { Args: { _token: string }; Returns: string }
+      claim_temp_pitches_by_email: { Args: never; Returns: number }
+      cleanup_expired_temp_pitches: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
