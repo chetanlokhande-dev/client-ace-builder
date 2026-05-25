@@ -34,6 +34,7 @@ const Dashboard = () => {
     details: "",
     links: "",
     industry: "SaaS",
+    clientUrl: "",
   });
   const [pitch, setPitch] = useState<PitchData | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -155,6 +156,19 @@ const Dashboard = () => {
               <div className="space-y-2">
                 <Label htmlFor="links">Links (optional)</Label>
                 <Input id="links" placeholder="https://yourportfolio.com" value={form.links} onChange={update("links")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="clientUrl">Client website (optional)</Label>
+                <Input
+                  id="clientUrl"
+                  type="url"
+                  placeholder="https://acme.com"
+                  value={form.clientUrl}
+                  onChange={update("clientUrl")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  We'll scan the site and tailor the pitch to their business.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>Client industry</Label>
