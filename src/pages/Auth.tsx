@@ -19,7 +19,11 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user) navigate("/dashboard", { replace: true });
+    if (!loading && user) {
+      const pending = sessionStorage.getItem("pitchforge:pending-claim");
+      if (pending) navigate(`/t/${pending}`, { replace: true });
+      else navigate("/dashboard", { replace: true });
+    }
   }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +46,9 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Welcome back!");
       }
-      navigate("/dashboard");
+      const pending = sessionStorage.getItem("pitchforge:pending-claim");
+      if (pending) navigate(`/t/${pending}`);
+      else navigate("/dashboard");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
       toast.error(msg);

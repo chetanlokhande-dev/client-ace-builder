@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/pitchforge/Navbar";
 import { Button } from "@/components/ui/button";
@@ -13,17 +13,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import PitchAssistant from "@/components/pitchforge/PitchAssistant";
-import { Download, Loader2, Save, Share2, Sparkles } from "lucide-react";
+import { Clock, Copy, Download, Loader2, Save, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { savePitch } from "@/services/pitches";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadPitchPdf } from "@/lib/pitchPdf";
 import { buildShareUrl, setPitchPublic } from "@/services/community";
+import {
+  buildTempUrl,
+  claimTempPitchesByEmail,
+  createTempPitch,
+} from "@/services/tempPitches";
 
 const INDUSTRIES = ["SaaS", "E-commerce", "Real Estate", "Startups", "Agencies"];
+
+const DRAFT_KEY = "pitchforge:dashboard-draft";
+
+type Draft = {
+  form: {
+    title: string;
+    description: string;
+    details: string;
+    links: string;
+    industry: string;
+    clientUrl: string;
+  };
+  pitch: PitchData | null;
+  personalizedFor: string | null;
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -42,6 +70,51 @@ const Dashboard = () => {
   const [savedShareToken, setSavedShareToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [guestOpen, setGuestOpen] = useState(false);
+  const [tempBusy, setTempBusy] = useState(false);
+  const [tempLink, setTempLink] = useState<string | null>(null);
+  const hydrated = useRef(false);
+
+  // Restore draft from localStorage on first mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw) as Draft;
+        if (d.form) setForm(d.form);
+        if (d.pitch) setPitch(d.pitch);
+        if (d.personalizedFor) setPersonalizedFor(d.personalizedFor);
+      }
+    } catch {
+      /* ignore */
+    }
+    hydrated.current = true;
+  }, []);
+
+  // Autosave draft
+  useEffect(() => {
+    if (!hydrated.current) return;
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ form, pitch, personalizedFor } satisfies Draft),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [form, pitch, personalizedFor]);
+
+  // When a user signs in, auto-import any temp pitches they reserved with their email
+  useEffect(() => {
+    if (!user) return;
+    claimTempPitchesByEmail()
+      .then((n) => {
+        if (n > 0) toast.success(`${n} guest pitch${n > 1 ? "es" : ""} added to your library.`);
+      })
+      .catch(() => {
+        /* silent — non-critical */
+      });
+  }, [user]);
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
@@ -74,8 +147,7 @@ const Dashboard = () => {
   const handleSave = async () => {
     if (!pitch) return;
     if (!user) {
-      toast.info("Sign in to save your pitch.");
-      navigate("/auth");
+      setGuestOpen(true);
       return;
     }
     setSaving(true);
@@ -84,11 +156,41 @@ const Dashboard = () => {
       setSavedId((row as { id: string }).id);
       setSavedShareToken((row as { share_token?: string }).share_token ?? null);
       toast.success("Pitch saved to your library.");
+      localStorage.removeItem(DRAFT_KEY);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not save pitch";
       toast.error(msg);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSignInAndSave = () => {
+    // Draft is already in localStorage; Auth redirects back to /dashboard
+    setGuestOpen(false);
+    navigate("/auth");
+  };
+
+  const handleCreateTempLink = async () => {
+    if (!pitch) return;
+    setTempBusy(true);
+    try {
+      const row = await createTempPitch({
+        title: form.title,
+        description: form.description,
+        details: form.details,
+        links: form.links,
+        industry: form.industry,
+        content: pitch,
+      });
+      const url = buildTempUrl(row.share_token);
+      setTempLink(url);
+      try { await navigator.clipboard.writeText(url); } catch { /* ignore */ }
+      toast.success("Temporary link created — copied to clipboard. Expires in 5 minutes.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not create temporary link");
+    } finally {
+      setTempBusy(false);
     }
   };
 
@@ -206,6 +308,62 @@ const Dashboard = () => {
         </div>
       </main>
       <PitchAssistant currentPitch={pitch} industry={form.industry} onPitch={setPitch} />
+
+      <Dialog open={guestOpen} onOpenChange={(o) => { setGuestOpen(o); if (!o) setTempLink(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save your pitch</DialogTitle>
+            <DialogDescription>
+              Sign in to keep it in your library forever — or grab a temporary 5-minute link you can open from any browser.
+            </DialogDescription>
+          </DialogHeader>
+
+          {tempLink ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/40 p-3 text-xs">
+                <Clock className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">{tempLink}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(tempLink);
+                    toast.success("Copied");
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Open this link in any browser within 5 minutes. From there you can sign in and save it permanently, or leave an email to claim it later.
+              </p>
+              <DialogFooter>
+                <Button variant="glass" onClick={() => { setGuestOpen(false); setTempLink(null); }}>
+                  Done
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Button variant="hero" className="w-full" onClick={handleSignInAndSave}>
+                Sign in & save permanently
+              </Button>
+              <Button
+                variant="glass"
+                className="w-full"
+                disabled={tempBusy}
+                onClick={handleCreateTempLink}
+              >
+                {tempBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                Create 5-minute temporary link
+              </Button>
+              <p className="pt-1 text-xs text-muted-foreground">
+                Your draft is auto-saved in this browser, so it will still be here when you come back.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
