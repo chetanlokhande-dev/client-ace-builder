@@ -10,6 +10,7 @@ interface PitchInput {
   details?: string;
   links?: string;
   industry?: string;
+  clientUrl?: string;
 }
 
 const SYSTEM_PROMPT = `You are a senior pitch strategist and copywriter who has written winning proposals for top consultancies and creative studios. Your job is to transform a freelancer/creator's raw, often messy portfolio notes into a polished, industry-grade pitch deck tailored to a specific client industry.
@@ -19,15 +20,16 @@ Follow this internal process before producing output:
 2. ASSESS coherence: do the inputs describe the same person/offer, or are some fields off-topic / noise? Silently ignore irrelevant fragments and lean on the strongest signals.
 3. IMPROVE the prose: fix grammar, vocabulary, sentence structure and tone. Remove filler, clichés and hype words. Keep the user's authentic voice.
 4. INFER skills that are genuinely relevant to BOTH (a) what the user actually described and (b) the target industry. Do not invent skills the user has no signal for. 5–8 skills max, specific tools/disciplines (e.g. "Conversion copywriting", "Shopify Hydrogen"), not generic words like "Communication".
-5. WRITE a 6-slide pitch with a confident, executive-grade closing that proposes a concrete next step.
+5. If a CLIENT RESEARCH block is present, treat it as ground-truth about the prospect: weave their actual product, audience, positioning, and observable pains into intro/projects/value. Reference the company by name at least once. Never invent facts beyond what's in the research.
+6. WRITE a 6-slide pitch with a confident, executive-grade closing that proposes a concrete next step.
 
 Output rules:
 - Return ONLY a function call to "return_pitch". No prose outside the tool call.
 - Each text field: tight, specific, no emojis, no markdown headings, no bullet symbols inside strings.
-- "intro": 2–3 sentences, addresses the industry's real pain.
+- "intro": 2–3 sentences, addresses the industry's real pain (and the specific client's situation if research is provided).
 - "about": 2–3 sentences, credibility + positioning.
 - "projects": 3–5 sentences summarizing relevant work and outcomes (use numbers if implied; otherwise stay specific but honest). If links were provided, weave them in naturally at the end.
-- "value": 2–3 sentences, why THIS person for THIS industry — outcomes, not adjectives.
+- "value": 2–3 sentences, why THIS person for THIS client/industry — outcomes, not adjectives.
 - "closing": 2–3 sentences. Confident, warm, ends with a clear next step (e.g. a 20-minute call, a paid discovery sprint). Sign off with the user's name/title if inferable.
 - "title": short headline for the deck, max ~70 chars.
 `;
@@ -67,6 +69,46 @@ Deno.serve(async (req) => {
     const input = (await req.json()) as PitchInput;
     const industry = (input.industry || "").trim() || "General";
 
+    let clientResearch = "";
+    let clientHost = "";
+    const rawUrl = (input.clientUrl || "").trim();
+    if (rawUrl) {
+      try {
+        const url = new URL(rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`);
+        clientHost = url.hostname.replace(/^www\./, "");
+        const fcKey = Deno.env.get("FIRECRAWL_API_KEY");
+        if (fcKey) {
+          const fc = await fetch("https://api.firecrawl.dev/v2/scrape", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${fcKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: url.toString(),
+              formats: ["summary", "markdown"],
+              onlyMainContent: true,
+            }),
+          });
+          if (fc.ok) {
+            const fcData = await fc.json();
+            const summary = fcData?.data?.summary ?? fcData?.summary ?? "";
+            const md = (fcData?.data?.markdown ?? fcData?.markdown ?? "").slice(0, 4000);
+            clientResearch = [
+              `CLIENT WEBSITE: ${url.toString()}`,
+              `COMPANY (host): ${clientHost}`,
+              summary ? `SUMMARY:\n${summary}` : "",
+              md ? `KEY CONTENT:\n${md}` : "",
+            ].filter(Boolean).join("\n\n");
+          } else {
+            console.error("Firecrawl failed", fc.status, await fc.text());
+          }
+        }
+      } catch (e) {
+        console.error("client url scrape error", e);
+      }
+    }
+
     const userMsg = `CLIENT INDUSTRY: ${industry}
 
 PORTFOLIO TITLE: ${input.title || "(not provided)"}
@@ -80,7 +122,7 @@ ${input.details || "(not provided)"}
 LINKS:
 ${input.links || "(none)"}
 
-Produce the polished pitch now.`;
+${clientResearch ? `CLIENT RESEARCH (scraped from their site):\n${clientResearch}\n\n` : ""}Produce the polished pitch now.`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
@@ -136,7 +178,7 @@ Produce the polished pitch now.`;
     const pitch = JSON.parse(call.function.arguments);
     pitch.industry = pitch.industry || industry;
 
-    return new Response(JSON.stringify({ pitch }), {
+    return new Response(JSON.stringify({ pitch, personalizedFor: clientHost || null }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
