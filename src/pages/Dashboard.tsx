@@ -37,6 +37,7 @@ const Dashboard = () => {
     clientUrl: "",
   });
   const [pitch, setPitch] = useState<PitchData | null>(null);
+  const [personalizedFor, setPersonalizedFor] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [savedShareToken, setSavedShareToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,7 @@ const Dashboard = () => {
       const generated = (data as { pitch?: PitchData })?.pitch;
       if (!generated) throw new Error("No pitch returned");
       setPitch(generated);
+      setPersonalizedFor((data as { personalizedFor?: string | null })?.personalizedFor ?? null);
       toast.success("Your pitch is ready!");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not generate pitch";
@@ -193,6 +195,12 @@ const Dashboard = () => {
 
           {/* Preview */}
           <div>
+            {personalizedFor && pitch && (
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <Sparkles className="h-3 w-3" />
+                Personalized for {personalizedFor}
+              </div>
+            )}
             <PitchPreview pitch={pitch} />
           </div>
         </div>
