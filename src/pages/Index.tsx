@@ -1,10 +1,19 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Navbar from "@/components/pitchforge/Navbar";
 import Footer from "@/components/pitchforge/Footer";
 import heroImg from "@/assets/hero-pitch.png";
-import { Check, FileText, Sparkles, Wand2, Zap, Target, Share2 } from "lucide-react";
+import { Check, FileText, Sparkles, Wand2, Zap, Target, Share2, Wrench } from "lucide-react";
 
 const features = [
   { icon: Wand2, title: "AI-tailored decks", desc: "Turn one portfolio into infinite client-specific pitches in seconds." },
@@ -26,6 +35,14 @@ const plans = [
 ];
 
 const Index = () => {
+  const [billingOpen, setBillingOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
+  const openBilling = (plan: string) => {
+    setSelectedPlan(plan);
+    setBillingOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -130,7 +147,17 @@ const Index = () => {
                   <li key={f} className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> {f}</li>
                 ))}
               </ul>
-              <Link to="/auth"><Button variant={p.highlight ? "hero" : "glass"} className="w-full">{p.cta}</Button></Link>
+              {p.name === "Free" ? (
+                <Link to="/auth"><Button variant={p.highlight ? "hero" : "glass"} className="w-full">{p.cta}</Button></Link>
+              ) : (
+                <Button
+                  variant={p.highlight ? "hero" : "glass"}
+                  className="w-full"
+                  onClick={() => openBilling(p.name)}
+                >
+                  {p.cta}
+                </Button>
+              )}
             </Card>
           ))}
         </div>
@@ -150,6 +177,28 @@ const Index = () => {
       </section>
 
       <Footer />
+
+      <Dialog open={billingOpen} onOpenChange={setBillingOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+              <Wrench className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <DialogTitle>{selectedPlan} plan — coming soon</DialogTitle>
+            <DialogDescription>
+              Paid billing is still under active development. In the meantime, you can use the full
+              free version — generate pitches, personalize them for clients, and share them — with no
+              credit card required.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="glass" onClick={() => setBillingOpen(false)}>Maybe later</Button>
+            <Link to="/auth" onClick={() => setBillingOpen(false)}>
+              <Button variant="hero">Continue with Free</Button>
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
