@@ -354,6 +354,59 @@ const Dashboard = () => {
 
           {/* Preview */}
           <div>
+            {versions.length > 0 && (
+              <Card className="mb-3 border-border/60 bg-gradient-card p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <HistoryIcon className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">Draft versions</h3>
+                  <span className="text-xs text-muted-foreground">
+                    {versions.length} {versions.length === 1 ? "draft" : "drafts"} · auto-saved in this browser
+                  </span>
+                </div>
+                <ul className="space-y-1.5">
+                  {versions.map((v, idx) => {
+                    const isActive = v.id === activeVersionId;
+                    return (
+                      <li key={v.id}>
+                        <div
+                          className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
+                            isActive
+                              ? "border-primary/50 bg-primary/10"
+                              : "border-border/60 bg-secondary/30 hover:bg-secondary/60"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => selectVersion(v.id)}
+                            className="flex flex-1 items-center gap-3 text-left"
+                          >
+                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background text-xs font-medium">
+                              v{versions.length - idx}
+                            </span>
+                            <span className="truncate font-medium">{v.label || "Untitled pitch"}</span>
+                            {v.personalizedFor && (
+                              <span className="hidden text-xs text-primary md:inline">· {v.personalizedFor}</span>
+                            )}
+                            <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                              {formatVersionTime(v.createdAt)}
+                            </span>
+                          </button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => deleteVersion(v.id)}
+                            aria-label="Delete version"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Card>
+            )}
             {personalizedFor && pitch && (
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                 <Sparkles className="h-3 w-3" />
