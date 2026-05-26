@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import PitchAssistant from "@/components/pitchforge/PitchAssistant";
-import { Clock, Copy, Download, Loader2, Save, Share2, Sparkles } from "lucide-react";
+import { Clock, Copy, Download, History as HistoryIcon, Loader2, Save, Share2, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { savePitch } from "@/services/pitches";
@@ -40,6 +40,14 @@ const INDUSTRIES = ["SaaS", "E-commerce", "Real Estate", "Startups", "Agencies"]
 
 const DRAFT_KEY = "pitchforge:dashboard-draft";
 
+type PitchVersion = {
+  id: string;
+  pitch: PitchData;
+  personalizedFor: string | null;
+  createdAt: number;
+  label: string;
+};
+
 type Draft = {
   form: {
     title: string;
@@ -51,6 +59,8 @@ type Draft = {
   };
   pitch: PitchData | null;
   personalizedFor: string | null;
+  versions?: PitchVersion[];
+  activeVersionId?: string | null;
 };
 
 const Dashboard = () => {
@@ -66,6 +76,8 @@ const Dashboard = () => {
   });
   const [pitch, setPitch] = useState<PitchData | null>(null);
   const [personalizedFor, setPersonalizedFor] = useState<string | null>(null);
+  const [versions, setVersions] = useState<PitchVersion[]>([]);
+  const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [savedShareToken, setSavedShareToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,6 +96,8 @@ const Dashboard = () => {
         if (d.form) setForm(d.form);
         if (d.pitch) setPitch(d.pitch);
         if (d.personalizedFor) setPersonalizedFor(d.personalizedFor);
+        if (Array.isArray(d.versions)) setVersions(d.versions);
+        if (d.activeVersionId) setActiveVersionId(d.activeVersionId);
       }
     } catch {
       /* ignore */
@@ -97,12 +111,12 @@ const Dashboard = () => {
     try {
       localStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ form, pitch, personalizedFor } satisfies Draft),
+        JSON.stringify({ form, pitch, personalizedFor, versions, activeVersionId } satisfies Draft),
       );
     } catch {
       /* ignore */
     }
-  }, [form, pitch, personalizedFor]);
+  }, [form, pitch, personalizedFor, versions, activeVersionId]);
 
   // When a user signs in, auto-import any temp pitches they reserved with their email
   useEffect(() => {
@@ -133,15 +147,56 @@ const Dashboard = () => {
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
       const generated = (data as { pitch?: PitchData })?.pitch;
       if (!generated) throw new Error("No pitch returned");
+      const personalized = (data as { personalizedFor?: string | null })?.personalizedFor ?? null;
+      const version: PitchVersion = {
+        id: (globalThis.crypto?.randomUUID?.() ?? `v-${Date.now()}`),
+        pitch: generated,
+        personalizedFor: personalized,
+        createdAt: Date.now(),
+        label: (form.title || "Untitled pitch").trim().slice(0, 60),
+      };
+      setVersions((prev) => [version, ...prev].slice(0, 20));
+      setActiveVersionId(version.id);
       setPitch(generated);
-      setPersonalizedFor((data as { personalizedFor?: string | null })?.personalizedFor ?? null);
-      toast.success("Your pitch is ready!");
+      setPersonalizedFor(personalized);
+      toast.success(versions.length === 0 ? "Your pitch is ready!" : "New version saved as draft.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not generate pitch";
       toast.error(msg);
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectVersion = (id: string) => {
+    const v = versions.find((x) => x.id === id);
+    if (!v) return;
+    setActiveVersionId(id);
+    setPitch(v.pitch);
+    setPersonalizedFor(v.personalizedFor);
+  };
+
+  const deleteVersion = (id: string) => {
+    setVersions((prev) => {
+      const next = prev.filter((v) => v.id !== id);
+      if (activeVersionId === id) {
+        const fallback = next[0] ?? null;
+        setActiveVersionId(fallback?.id ?? null);
+        setPitch(fallback?.pitch ?? null);
+        setPersonalizedFor(fallback?.personalizedFor ?? null);
+      }
+      return next;
+    });
+  };
+
+  const formatVersionTime = (ts: number) => {
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   const handleSave = async () => {
@@ -157,6 +212,8 @@ const Dashboard = () => {
       setSavedShareToken((row as { share_token?: string }).share_token ?? null);
       toast.success("Pitch saved to your library.");
       localStorage.removeItem(DRAFT_KEY);
+      setVersions([]);
+      setActiveVersionId(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not save pitch";
       toast.error(msg);
