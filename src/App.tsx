@@ -13,6 +13,9 @@ import Community from "./pages/Community.tsx";
 import Saved from "./pages/Saved.tsx";
 import SharedPitch from "./pages/SharedPitch.tsx";
 import TempPitch from "./pages/TempPitch.tsx";
+import Privacy from "./pages/Privacy.tsx";
+import Terms from "./pages/Terms.tsx";
+import Contact from "./pages/Contact.tsx";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 
 const queryClient = new QueryClient();
@@ -34,6 +37,9 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/p/:token" element={<SharedPitch />} />
             <Route path="/t/:token" element={<TempPitch />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/contact" element={<Contact />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
