@@ -24,6 +24,14 @@ import {
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import PitchAssistant from "@/components/pitchforge/PitchAssistant";
 import { Clock, Copy, Download, History as HistoryIcon, Loader2, Save, Share2, Sparkles, Trash2 } from "lucide-react";
+import { UserCog, Wand2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  hasPersonality,
+  loadPersonality,
+  readCachedPersonality,
+  type Personality,
+} from "@/services/personality";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { savePitch } from "@/services/pitches";
@@ -87,6 +95,9 @@ const Dashboard = () => {
   const [tempLink, setTempLink] = useState<string | null>(null);
   const hydrated = useRef(false);
 
+  const [personality, setPersonality] = useState<Personality | null>(() => readCachedPersonality());
+  const [usePersonality, setUsePersonality] = useState(true);
+
   // Restore draft from localStorage on first mount
   useEffect(() => {
     try {
@@ -130,6 +141,12 @@ const Dashboard = () => {
       });
   }, [user]);
 
+  // Pull latest personality from backend whenever auth state changes
+  useEffect(() => {
+    if (!user) return;
+    loadPersonality(user.id).then(setPersonality).catch(() => { /* ignore */ });
+  }, [user]);
+
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
@@ -156,9 +173,10 @@ const Dashboard = () => {
       return;
     }
     setLoading(true);
+    const applyPersonality = usePersonality && hasPersonality(personality);
     try {
       const { data, error } = await supabase.functions.invoke("generate-pitch", {
-        body: form,
+        body: { ...form, personality: applyPersonality ? personality : undefined },
       });
       if (error) throw error;
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
@@ -176,10 +194,51 @@ const Dashboard = () => {
       setActiveVersionId(version.id);
       setPitch(generated);
       setPersonalizedFor(personalized);
-      toast.success(versions.length === 0 ? "Your pitch is ready!" : "New version saved as draft.");
+      toast.success(
+        applyPersonality
+          ? "Pitch generated in your voice."
+          : versions.length === 0
+          ? "Your pitch is ready!"
+          : "New version saved as draft.",
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not generate pitch";
       toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRedesignWithPersonality = async () => {
+    if (!hasPersonality(personality)) {
+      toast.info("Add your personality preferences in Profile first.");
+      navigate("/profile");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-pitch", {
+        body: { ...form, personality, redesign: true, previousPitch: pitch },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      const generated = (data as { pitch?: PitchData })?.pitch;
+      if (!generated) throw new Error("No pitch returned");
+      const personalized = (data as { personalizedFor?: string | null })?.personalizedFor ?? null;
+      const version: PitchVersion = {
+        id: (globalThis.crypto?.randomUUID?.() ?? `v-${Date.now()}`),
+        pitch: generated,
+        personalizedFor: personalized,
+        createdAt: Date.now(),
+        label: `${(form.title || "Untitled pitch").trim().slice(0, 50)} · my voice`,
+      };
+      setVersions((prev) => [version, ...prev].slice(0, 20));
+      setActiveVersionId(version.id);
+      setPitch(generated);
+      setPersonalizedFor(personalized);
+      toast.success("Redesigned in your voice.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not redesign pitch");
     } finally {
       setLoading(false);
     }
@@ -366,6 +425,50 @@ const Dashboard = () => {
                   <><Sparkles className="h-4 w-4" /> Generate AI pitch</>
                 )}
               </Button>
+
+              <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 text-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2">
+                    <UserCog className="mt-0.5 h-4 w-4 text-primary" />
+                    <div>
+                      <div className="font-medium">Write in my personality</div>
+                      <p className="text-xs text-muted-foreground">
+                        {hasPersonality(personality)
+                          ? "Blend your tone, voice, and values into every pitch."
+                          : "Add your personality in Profile to unlock."}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={usePersonality && hasPersonality(personality)}
+                    onCheckedChange={setUsePersonality}
+                    disabled={!hasPersonality(personality)}
+                    aria-label="Use my personality"
+                  />
+                </div>
+                {!hasPersonality(personality) ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 h-7 px-2 text-xs"
+                    onClick={() => navigate("/profile")}
+                  >
+                    Set up personality →
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="glass"
+                    size="sm"
+                    className="mt-3 w-full"
+                    disabled={!pitch || loading}
+                    onClick={handleRedesignWithPersonality}
+                  >
+                    <Wand2 className="h-3.5 w-3.5" /> Redesign current pitch in my voice
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
 
