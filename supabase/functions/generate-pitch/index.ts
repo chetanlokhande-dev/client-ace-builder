@@ -11,6 +11,18 @@ interface PitchInput {
   links?: string;
   industry?: string;
   clientUrl?: string;
+  personality?: {
+    tone?: string;
+    voice?: string;
+    strengths?: string;
+    values?: string;
+    workingStyle?: string;
+    communication?: string;
+    signaturePhrases?: string;
+    avoid?: string;
+  };
+  redesign?: boolean;
+  previousPitch?: unknown;
 }
 
 const SYSTEM_PROMPT = `You are a senior pitch strategist and copywriter who has written winning proposals for top consultancies and creative studios. Your job is to transform a freelancer/creator's raw, often messy portfolio notes into a polished, industry-grade pitch deck tailored to a specific client industry.
@@ -32,6 +44,10 @@ Output rules:
 - "value": 2–3 sentences, why THIS person for THIS client/industry — outcomes, not adjectives.
 - "closing": 2–3 sentences. Confident, warm, ends with a clear next step (e.g. a 20-minute call, a paid discovery sprint). Sign off with the user's name/title if inferable.
 - "title": short headline for the deck, max ~70 chars.
+
+If a PERSONALITY block is provided, treat it as ground-truth about the user's voice. Match their stated tone, voice, working style, communication style, and signature phrases. Highlight the strengths they listed and the values they care about. Strictly avoid anything in their "avoid" list. Personality MUST shape word choice, sentence rhythm, and how the closing is signed — but never invent biographical facts or skills the user did not provide.
+
+If REDESIGN MODE is on, you are rewriting a PREVIOUS PITCH so it sounds unmistakably like the user (per the PERSONALITY block) while keeping the same factual substance and the same 6-slide structure. Improve, do not water down. Don't repeat the previous wording verbatim.
 `;
 
 const PITCH_TOOL = {
@@ -122,7 +138,21 @@ ${input.details || "(not provided)"}
 LINKS:
 ${input.links || "(none)"}
 
-${clientResearch ? `CLIENT RESEARCH (scraped from their site):\n${clientResearch}\n\n` : ""}Produce the polished pitch now.`;
+${clientResearch ? `CLIENT RESEARCH (scraped from their site):\n${clientResearch}\n\n` : ""}${
+      input.personality && Object.values(input.personality).some((v) => typeof v === "string" && v.trim())
+        ? `PERSONALITY (write in this voice):
+${Object.entries(input.personality)
+  .filter(([, v]) => typeof v === "string" && v.trim())
+  .map(([k, v]) => `- ${k}: ${v}`)
+  .join("\n")}
+
+`
+        : ""
+    }${
+      input.redesign && input.previousPitch
+        ? `REDESIGN MODE: ON\nPREVIOUS PITCH (JSON):\n${JSON.stringify(input.previousPitch).slice(0, 4000)}\n\n`
+        : ""
+    }Produce the polished pitch now.`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
