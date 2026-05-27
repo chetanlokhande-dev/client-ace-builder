@@ -194,6 +194,25 @@ export type Database = {
       claim_temp_pitch: { Args: { _token: string }; Returns: string }
       claim_temp_pitches_by_email: { Args: never; Returns: number }
       cleanup_expired_temp_pitches: { Args: never; Returns: undefined }
+      get_temp_pitch: {
+        Args: { _token: string }
+        Returns: {
+          content: Json
+          created_at: string
+          description: string
+          details: string
+          expires_at: string
+          id: string
+          industry: string
+          links: string
+          share_token: string
+          title: string
+        }[]
+      }
+      set_temp_pitch_email: {
+        Args: { _email: string; _token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
