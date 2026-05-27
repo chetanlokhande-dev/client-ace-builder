@@ -9,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  loadPersonality,
+  savePersonality,
+  type Personality,
+} from "@/services/personality";
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
@@ -24,6 +30,9 @@ const Profile = () => {
   const [newPwd, setNewPwd] = useState("");
   const [changingPwd, setChangingPwd] = useState(false);
 
+  const [personality, setPersonality] = useState<Personality>({});
+  const [savingPersonality, setSavingPersonality] = useState(false);
+
   useEffect(() => { if (!authLoading && !user) navigate("/auth"); }, [authLoading, user, navigate]);
 
   useEffect(() => {
@@ -31,6 +40,27 @@ const Profile = () => {
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
       .then(({ data }) => setFullName(data?.full_name ?? ""));
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadPersonality(user.id).then(setPersonality).catch(() => { /* ignore */ });
+  }, [user]);
+
+  const updateP = (k: keyof Personality) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setPersonality((prev) => ({ ...prev, [k]: e.target.value }));
+
+  const handleSavePersonality = async () => {
+    if (!user) return;
+    setSavingPersonality(true);
+    try {
+      await savePersonality(user.id, personality);
+      toast.success("Personality saved. New pitches will use your voice.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save personality");
+    } finally {
+      setSavingPersonality(false);
+    }
+  };
 
   const saveName = async () => {
     if (!user) return;
@@ -84,6 +114,52 @@ const Profile = () => {
           </div>
           <Button variant="hero" disabled={savingName} onClick={saveName}>
             {savingName && <Loader2 className="h-4 w-4 animate-spin" />} Save
+          </Button>
+        </Card>
+
+        <Card className="border-border/60 bg-gradient-card p-6 space-y-4">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Personality &amp; voice</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Teach the AI how you sound. These hints are blended into every new pitch generation (and the "Redesign in my voice" action on the studio).
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="p-tone">Tone</Label>
+              <Input id="p-tone" placeholder="warm, direct, dry-witty" value={personality.tone ?? ""} onChange={updateP("tone")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-voice">Voice / persona</Label>
+              <Input id="p-voice" placeholder="confident expert, friendly partner" value={personality.voice ?? ""} onChange={updateP("voice")} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="p-strengths">Strengths you want highlighted</Label>
+              <Textarea id="p-strengths" rows={2} placeholder="systems thinking, conversion copy, shipping fast under ambiguity" value={personality.strengths ?? ""} onChange={updateP("strengths")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-values">Values</Label>
+              <Textarea id="p-values" rows={2} placeholder="craft, candor, long-term thinking" value={personality.values ?? ""} onChange={updateP("values")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-style">Working style</Label>
+              <Textarea id="p-style" rows={2} placeholder="async-first, weekly demos, small focused sprints" value={personality.workingStyle ?? ""} onChange={updateP("workingStyle")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-comm">Communication style</Label>
+              <Textarea id="p-comm" rows={2} placeholder="short Loom updates, plain English, no jargon" value={personality.communication ?? ""} onChange={updateP("communication")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-sign">Signature phrases (optional)</Label>
+              <Textarea id="p-sign" rows={2} placeholder="'ship to learn', 'taste is the unfair advantage'" value={personality.signaturePhrases ?? ""} onChange={updateP("signaturePhrases")} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="p-avoid">Things to avoid</Label>
+              <Textarea id="p-avoid" rows={2} placeholder="corporate clichés, emojis, the word 'synergy'" value={personality.avoid ?? ""} onChange={updateP("avoid")} />
+            </div>
+          </div>
+          <Button variant="hero" disabled={savingPersonality} onClick={handleSavePersonality}>
+            {savingPersonality && <Loader2 className="h-4 w-4 animate-spin" />} Save personality
           </Button>
         </Card>
 
