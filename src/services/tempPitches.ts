@@ -43,20 +43,20 @@ export async function createTempPitch(input: TempPitchInput): Promise<TempPitchR
 }
 
 export async function getTempPitch(token: string): Promise<TempPitchRow | null> {
-  const { data, error } = await supabase
-    .from("temp_pitches")
-    .select("*")
-    .eq("share_token", token)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc(
+    "get_temp_pitch" as never,
+    { _token: token } as never,
+  );
   if (error) throw error;
-  return (data as unknown as TempPitchRow) ?? null;
+  const rows = (data as unknown as TempPitchRow[]) ?? [];
+  return rows[0] ?? null;
 }
 
 export async function setClaimEmail(token: string, email: string) {
-  const { error } = await supabase
-    .from("temp_pitches")
-    .update({ claim_email: email.toLowerCase().trim() })
-    .eq("share_token", token);
+  const { error } = await supabase.rpc(
+    "set_temp_pitch_email" as never,
+    { _token: token, _email: email } as never,
+  );
   if (error) throw error;
 }
 
