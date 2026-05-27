@@ -134,8 +134,25 @@ const Dashboard = () => {
     setForm({ ...form, [k]: e.target.value });
 
   const handleGenerate = async () => {
-    if (!form.title && !form.description && !form.details) {
-      toast.error("Add a title, description, or project details so we know what to pitch.");
+    const missing: string[] = [];
+    const title = form.title.trim();
+    const description = form.description.trim();
+    const details = form.details.trim();
+    const industry = (form.industry || "").trim();
+
+    if (!title || title.length < 3) missing.push("a portfolio title (3+ chars)");
+    if (!industry) missing.push("a target industry");
+    if (!description || description.split(/\s+/).length < 15)
+      missing.push("a short description (at least ~15 words about who you are / what you do)");
+    if (!details || details.split(/\s+/).length < 20)
+      missing.push("project details (at least ~20 words with concrete work, outcomes, or context)");
+
+    // Title alone is not enough — short description or portfolio title alone should be rejected.
+    if (missing.length > 0) {
+      toast.error(
+        `We need more to write a strong pitch. Please add: ${missing.join("; ")}.`,
+        { duration: 6000 },
+      );
       return;
     }
     setLoading(true);
