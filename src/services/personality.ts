@@ -48,7 +48,7 @@ export const loadPersonality = async (userId: string): Promise<Personality> => {
 export const savePersonality = async (userId: string, p: Personality) => {
   const { error } = await supabase
     .from("profiles")
-    .upsert({ id: userId, personality: p as unknown as Record<string, unknown> });
+    .upsert({ id: userId, personality: p as unknown as never });
   if (error) throw error;
   cachePersonality(p);
 };
