@@ -14,6 +14,7 @@ export interface PitchRow {
   share_token: string;
   created_at: string;
   updated_at: string;
+  expires_at?: string | null;
 }
 
 export const setPitchPublic = async (id: string, isPublic: boolean) => {
