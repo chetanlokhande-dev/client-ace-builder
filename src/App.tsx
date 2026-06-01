@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard.tsx";
 import History from "./pages/History.tsx";
 import Profile from "./pages/Profile.tsx";
 import Community from "./pages/Community.tsx";
+import Communities from "./pages/Communities.tsx";
+import CommunityDetail from "./pages/CommunityDetail.tsx";
 import Saved from "./pages/Saved.tsx";
 import SharedPitch from "./pages/SharedPitch.tsx";
 import TempPitch from "./pages/TempPitch.tsx";
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/history" element={<History />} />
             <Route path="/saved" element={<Saved />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/communities" element={<Communities />} />
+            <Route path="/communities/:id" element={<CommunityDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/p/:token" element={<SharedPitch />} />
             <Route path="/t/:token" element={<TempPitch />} />
