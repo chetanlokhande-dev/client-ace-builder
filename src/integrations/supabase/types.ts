@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      communities: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at: string
+          visibility: Database["public"]["Enums"]["community_visibility"]
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          slug: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          slug?: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["community_visibility"]
+        }
+        Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["community_role"]
+          status: Database["public"]["Enums"]["community_member_status"]
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["community_role"]
+          status?: Database["public"]["Enums"]["community_member_status"]
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["community_role"]
+          status?: Database["public"]["Enums"]["community_member_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_pitches: {
+        Row: {
+          community_id: string
+          created_at: string
+          id: string
+          pitch_id: string
+          posted_by: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          id?: string
+          pitch_id: string
+          posted_by: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          id?: string
+          pitch_id?: string
+          posted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_pitches_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_pitches_pitch_id_fkey"
+            columns: ["pitch_id"]
+            isOneToOne: false
+            referencedRelation: "pitches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pitch_bookmarks: {
         Row: {
           created_at: string
@@ -81,6 +188,7 @@ export type Database = {
           created_at: string
           description: string | null
           details: string | null
+          expires_at: string | null
           id: string
           industry: string
           is_public: boolean
@@ -95,6 +203,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           details?: string | null
+          expires_at?: string | null
           id?: string
           industry: string
           is_public?: boolean
@@ -109,6 +218,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           details?: string | null
+          expires_at?: string | null
           id?: string
           industry?: string
           is_public?: boolean
@@ -196,7 +306,12 @@ export type Database = {
     Functions: {
       claim_temp_pitch: { Args: { _token: string }; Returns: string }
       claim_temp_pitches_by_email: { Args: never; Returns: number }
+      cleanup_expired_pitches: { Args: never; Returns: undefined }
       cleanup_expired_temp_pitches: { Args: never; Returns: undefined }
+      community_role_of: {
+        Args: { _community: string; _user: string }
+        Returns: Database["public"]["Enums"]["community_role"]
+      }
       get_temp_pitch: {
         Args: { _token: string }
         Returns: {
@@ -212,13 +327,55 @@ export type Database = {
           title: string
         }[]
       }
+      is_community_banned: {
+        Args: { _community: string; _user: string }
+        Returns: boolean
+      }
+      is_community_member: {
+        Args: { _community: string; _user: string }
+        Returns: boolean
+      }
+      is_community_staff: {
+        Args: { _community: string; _user: string }
+        Returns: boolean
+      }
+      join_community: {
+        Args: { _community: string }
+        Returns: Database["public"]["Enums"]["community_member_status"]
+      }
+      remove_member: {
+        Args: { _community: string; _user: string }
+        Returns: undefined
+      }
+      set_member_role: {
+        Args: {
+          _community: string
+          _role: Database["public"]["Enums"]["community_role"]
+          _user: string
+        }
+        Returns: undefined
+      }
+      set_member_status: {
+        Args: {
+          _community: string
+          _status: Database["public"]["Enums"]["community_member_status"]
+          _user: string
+        }
+        Returns: undefined
+      }
+      set_pitch_expiry: {
+        Args: { _expires_at: string; _pitch_id: string }
+        Returns: undefined
+      }
       set_temp_pitch_email: {
         Args: { _email: string; _token: string }
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      community_member_status: "active" | "pending" | "banned"
+      community_role: "owner" | "leader" | "member"
+      community_visibility: "public" | "private" | "global"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -345,6 +502,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      community_member_status: ["active", "pending", "banned"],
+      community_role: ["owner", "leader", "member"],
+      community_visibility: ["public", "private", "global"],
+    },
   },
 } as const

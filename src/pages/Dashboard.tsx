@@ -286,7 +286,9 @@ const Dashboard = () => {
       const row = await savePitch(user.id, form, pitch);
       setSavedId((row as { id: string }).id);
       setSavedShareToken((row as { share_token?: string }).share_token ?? null);
-      toast.success("Pitch saved to your library.");
+      toast.success("Pitch saved to your library", {
+        description: "Kept for 30 days by default. Change the timer (or set Never) from History.",
+      });
       localStorage.removeItem(DRAFT_KEY);
       setVersions([]);
       setActiveVersionId(null);

@@ -26,6 +26,7 @@ const Navbar = () => {
               <Link to="/history" className="hover:text-foreground transition-colors">History</Link>
               <Link to="/saved" className="hover:text-foreground transition-colors">Saved</Link>
               <Link to="/community" className="hover:text-foreground transition-colors">Community</Link>
+              <Link to="/communities" className="hover:text-foreground transition-colors">Groups</Link>
               <Link to="/profile" className="hover:text-foreground transition-colors">Profile</Link>
             </>
           ) : (

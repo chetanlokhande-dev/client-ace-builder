@@ -5,6 +5,8 @@ import type { PitchRow } from "@/services/community";
 import { downloadPitchPdf } from "@/lib/pitchPdf";
 import { buildShareUrl } from "@/services/community";
 import { toast } from "sonner";
+import ExpiryControl from "@/components/pitchforge/ExpiryControl";
+import { useState } from "react";
 
 interface Props {
   pitch: PitchRow;
@@ -38,6 +40,7 @@ const Stars = ({ value, mine, onRate }: { value: number; mine?: number; onRate?:
 );
 
 const PitchCard = ({ pitch, rating, bookmarked, onTogglePublic, onRate, onBookmark, onDelete, ownerView }: Props) => {
+  const [expiresAt, setExpiresAt] = useState<string | null>(pitch.expires_at ?? null);
   const copyShare = async () => {
     if (!pitch.is_public && ownerView && onTogglePublic) {
       onTogglePublic(pitch.id, true);
@@ -71,6 +74,9 @@ const PitchCard = ({ pitch, rating, bookmarked, onTogglePublic, onRate, onBookma
       <div className="mt-1 flex flex-wrap gap-2">
         <Button size="sm" variant="glass" onClick={() => downloadPitchPdf(pitch.content)}><Download className="h-3 w-3" /> PDF</Button>
         <Button size="sm" variant="glass" onClick={copyShare}><Link2 className="h-3 w-3" /> Share</Button>
+        {ownerView && (
+          <ExpiryControl pitchId={pitch.id} expiresAt={expiresAt} onChange={setExpiresAt} />
+        )}
         {onBookmark && (
           <Button size="sm" variant="glass" onClick={() => onBookmark(pitch.id, !bookmarked)}>
             {bookmarked ? <BookmarkCheck className="h-3 w-3" /> : <Bookmark className="h-3 w-3" />}
