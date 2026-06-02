@@ -48,7 +48,7 @@ const ExpiryControl = ({ pitchId, expiresAt, onChange }: Props) => {
           {formatExpiry(expiresAt)}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-2 pointer-events-auto" align="end">
+      <PopoverContent className="w-auto min-w-[16rem] p-2 pointer-events-auto" align="end">
         {!showCal ? (
           <div className="flex flex-col gap-1">
             <p className="px-2 py-1 text-xs text-muted-foreground">Keep this pitch for…</p>
@@ -67,9 +67,15 @@ const ExpiryControl = ({ pitchId, expiresAt, onChange }: Props) => {
             </Button>
           </div>
         ) : (
-          <div>
-            <Calendar mode="single" disabled={(d) => d <= new Date()} onSelect={(d) => d && apply(d)} className="pointer-events-auto" />
-            <Button variant="ghost" size="sm" className="w-full" onClick={() => setShowCal(false)}>Back</Button>
+          <div className="flex flex-col">
+            <Calendar
+              mode="single"
+              disabled={(d) => d <= new Date()}
+              onSelect={(d) => d && apply(d)}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+            <Button variant="ghost" size="sm" className="mt-1 w-full" onClick={() => setShowCal(false)}>Back</Button>
           </div>
         )}
       </PopoverContent>
