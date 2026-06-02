@@ -6,6 +6,7 @@ import { downloadPitchPdf } from "@/lib/pitchPdf";
 import { buildShareUrl } from "@/services/community";
 import { toast } from "sonner";
 import ExpiryControl from "@/components/pitchforge/ExpiryControl";
+import { formatExpiry } from "@/services/pitches";
 import { useState } from "react";
 
 interface Props {
@@ -57,10 +58,18 @@ const PitchCard = ({ pitch, rating, bookmarked, onTogglePublic, onRate, onBookma
           <p className="text-xs text-muted-foreground">{pitch.industry} · {new Date(pitch.created_at).toLocaleDateString()}</p>
         </div>
         {ownerView && (
-          <span className="flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-            {pitch.is_public ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-            {pitch.is_public ? "Public" : "Private"}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              {pitch.is_public ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+              {pitch.is_public ? "Public" : "Private"}
+            </span>
+            <span
+              className={`text-[10px] ${expiresAt && new Date(expiresAt).getTime() - Date.now() < 3 * 86400000 ? "text-destructive" : "text-muted-foreground"}`}
+              title={expiresAt ? new Date(expiresAt).toLocaleString() : "Kept forever"}
+            >
+              {formatExpiry(expiresAt)}
+            </span>
+          </div>
         )}
       </div>
 
