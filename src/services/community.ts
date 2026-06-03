@@ -15,6 +15,7 @@ export interface PitchRow {
   created_at: string;
   updated_at: string;
   expires_at?: string | null;
+  show_author?: boolean;
 }
 
 export const setPitchPublic = async (id: string, isPublic: boolean) => {
@@ -26,6 +27,36 @@ export const setPitchPublic = async (id: string, isPublic: boolean) => {
     .single();
   if (error) throw error;
   return data;
+};
+
+export const setPitchShowAuthor = async (id: string, show: boolean) => {
+  const { error } = await supabase
+    .from("pitches")
+    .update({ show_author: show })
+    .eq("id", id);
+  if (error) throw error;
+};
+
+export interface PublicProfile {
+  id: string;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+}
+
+export const getPublicProfile = async (userId: string): Promise<PublicProfile | null> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("get_public_profile", { _user_id: userId });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as PublicProfile | null;
+};
+
+export const listPublicPitchesByUser = async (userId: string): Promise<PitchRow[]> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("list_public_pitches_by_user", { _user_id: userId });
+  if (error) throw error;
+  return (data ?? []) as PitchRow[];
 };
 
 export const listMyPitches = async (userId: string) => {

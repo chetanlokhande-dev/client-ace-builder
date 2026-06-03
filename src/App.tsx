@@ -15,6 +15,7 @@ import CommunityDetail from "./pages/CommunityDetail.tsx";
 import Saved from "./pages/Saved.tsx";
 import SharedPitch from "./pages/SharedPitch.tsx";
 import TempPitch from "./pages/TempPitch.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Terms from "./pages/Terms.tsx";
 import Contact from "./pages/Contact.tsx";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/p/:token" element={<SharedPitch />} />
             <Route path="/t/:token" element={<TempPitch />} />
+            <Route path="/u/:userId" element={<UserProfile />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/contact" element={<Contact />} />
