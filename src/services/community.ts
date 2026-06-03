@@ -30,7 +30,8 @@ export const setPitchPublic = async (id: string, isPublic: boolean) => {
 };
 
 export const setPitchShowAuthor = async (id: string, show: boolean) => {
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("pitches")
     .update({ show_author: show })
     .eq("id", id);
