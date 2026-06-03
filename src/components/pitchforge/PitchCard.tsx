@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bookmark, BookmarkCheck, Download, Globe, Link2, Lock, Star, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Download, Globe, Link2, Lock, Star, Trash2, UserCircle2 } from "lucide-react";
 import type { PitchRow } from "@/services/community";
+import { setPitchShowAuthor } from "@/services/community";
 import { downloadPitchPdf } from "@/lib/pitchPdf";
 import { buildShareUrl } from "@/services/community";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ const Stars = ({ value, mine, onRate }: { value: number; mine?: number; onRate?:
 
 const PitchCard = ({ pitch, rating, bookmarked, onTogglePublic, onRate, onBookmark, onDelete, ownerView }: Props) => {
   const [expiresAt, setExpiresAt] = useState<string | null>(pitch.expires_at ?? null);
+  const [showAuthor, setShowAuthor] = useState<boolean>(Boolean(pitch.show_author));
   const copyShare = async () => {
     if (!pitch.is_public && ownerView && onTogglePublic) {
       onTogglePublic(pitch.id, true);
@@ -96,6 +98,26 @@ const PitchCard = ({ pitch, rating, bookmarked, onTogglePublic, onRate, onBookma
           <Button size="sm" variant="glass" onClick={() => onTogglePublic(pitch.id, !pitch.is_public)}>
             {pitch.is_public ? <Lock className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
             {pitch.is_public ? "Make private" : "Publish"}
+          </Button>
+        )}
+        {ownerView && (
+          <Button
+            size="sm"
+            variant="glass"
+            onClick={async () => {
+              const next = !showAuthor;
+              setShowAuthor(next);
+              try {
+                await setPitchShowAuthor(pitch.id, next);
+                toast.success(next ? "Your name will appear on this pitch" : "Author hidden");
+              } catch (e) {
+                setShowAuthor(!next);
+                toast.error(e instanceof Error ? e.message : "Could not update");
+              }
+            }}
+          >
+            <UserCircle2 className="h-3 w-3" />
+            {showAuthor ? "Hide author" : "Show author"}
           </Button>
         )}
         {ownerView && onDelete && (
