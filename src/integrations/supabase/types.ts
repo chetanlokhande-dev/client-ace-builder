@@ -194,6 +194,7 @@ export type Database = {
           is_public: boolean
           links: string | null
           share_token: string
+          show_author: boolean
           title: string
           updated_at: string
           user_id: string
@@ -209,6 +210,7 @@ export type Database = {
           is_public?: boolean
           links?: string | null
           share_token?: string
+          show_author?: boolean
           title: string
           updated_at?: string
           user_id: string
@@ -224,6 +226,7 @@ export type Database = {
           is_public?: boolean
           links?: string | null
           share_token?: string
+          show_author?: boolean
           title?: string
           updated_at?: string
           user_id?: string
@@ -233,26 +236,32 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           full_name: string | null
           id: string
           personality: Json | null
+          show_author_default: boolean
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           full_name?: string | null
           id: string
           personality?: Json | null
+          show_author_default?: boolean
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           personality?: Json | null
+          show_author_default?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -312,6 +321,15 @@ export type Database = {
         Args: { _community: string; _user: string }
         Returns: Database["public"]["Enums"]["community_role"]
       }
+      get_public_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          full_name: string
+          id: string
+        }[]
+      }
       get_temp_pitch: {
         Args: { _token: string }
         Returns: {
@@ -342,6 +360,31 @@ export type Database = {
       join_community: {
         Args: { _community: string }
         Returns: Database["public"]["Enums"]["community_member_status"]
+      }
+      list_public_pitches_by_user: {
+        Args: { _user_id: string }
+        Returns: {
+          content: Json
+          created_at: string
+          description: string | null
+          details: string | null
+          expires_at: string | null
+          id: string
+          industry: string
+          is_public: boolean
+          links: string | null
+          share_token: string
+          show_author: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "pitches"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       remove_member: {
         Args: { _community: string; _user: string }
