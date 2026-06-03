@@ -24,7 +24,7 @@ import {
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import PitchAssistant from "@/components/pitchforge/PitchAssistant";
 import { Clock, Copy, Download, History as HistoryIcon, Loader2, Save, Share2, Sparkles, Trash2 } from "lucide-react";
-import { UserCog, Wand2 } from "lucide-react";
+import { UserCog, Wand2, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   hasPersonality,
@@ -43,6 +43,12 @@ import {
   claimTempPitchesByEmail,
   createTempPitch,
 } from "@/services/tempPitches";
+import {
+  clearDraft,
+  draftMeta,
+  evaluateDraft,
+  installLeaveTracker,
+} from "@/lib/draftLifecycle";
 
 const INDUSTRIES = ["SaaS", "E-commerce", "Real Estate", "Startups", "Agencies"];
 
@@ -97,24 +103,32 @@ const Dashboard = () => {
 
   const [personality, setPersonality] = useState<Personality | null>(() => readCachedPersonality());
   const [usePersonality, setUsePersonality] = useState(true);
+  const [recoveryBanner, setRecoveryBanner] = useState<string | null>(null);
 
   // Restore draft from localStorage on first mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
-      if (raw) {
+      const verdict = evaluateDraft(Boolean(raw));
+      if (verdict.action === "clear") {
+        clearDraft();
+      } else if (raw) {
         const d = JSON.parse(raw) as Draft;
         if (d.form) setForm(d.form);
         if (d.pitch) setPitch(d.pitch);
         if (d.personalizedFor) setPersonalizedFor(d.personalizedFor);
         if (Array.isArray(d.versions)) setVersions(d.versions);
         if (d.activeVersionId) setActiveVersionId(d.activeVersionId);
+        if (verdict.action === "offer") setRecoveryBanner(verdict.reason);
       }
     } catch {
       /* ignore */
     }
     hydrated.current = true;
   }, []);
+
+  // Track tab-leave intent so the next mount can decide whether to revive the draft.
+  useEffect(() => installLeaveTracker(), []);
 
   // Autosave draft
   useEffect(() => {
@@ -124,6 +138,7 @@ const Dashboard = () => {
         DRAFT_KEY,
         JSON.stringify({ form, pitch, personalizedFor, versions, activeVersionId } satisfies Draft),
       );
+      draftMeta.patch({ lastEdit: Date.now(), createdAt: draftMeta.read().createdAt ?? Date.now() });
     } catch {
       /* ignore */
     }
@@ -194,6 +209,7 @@ const Dashboard = () => {
       setActiveVersionId(version.id);
       setPitch(generated);
       setPersonalizedFor(personalized);
+      draftMeta.patch({ lastGenerate: Date.now() });
       toast.success(
         applyPersonality
           ? "Pitch generated in your voice."
@@ -236,6 +252,7 @@ const Dashboard = () => {
       setActiveVersionId(version.id);
       setPitch(generated);
       setPersonalizedFor(personalized);
+      draftMeta.patch({ lastGenerate: Date.now() });
       toast.success("Redesigned in your voice.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not redesign pitch");
@@ -289,9 +306,13 @@ const Dashboard = () => {
       toast.success("Pitch saved to your library", {
         description: "Kept for 30 days by default. Change the timer (or set Never) from History.",
       });
-      localStorage.removeItem(DRAFT_KEY);
+      draftMeta.patch({ savedAt: Date.now(), leftVia: "save" });
+      clearDraft();
       setVersions([]);
       setActiveVersionId(null);
+      setPitch(null);
+      setForm({ title: "", description: "", details: "", links: "", industry: "SaaS", clientUrl: "" });
+      setRecoveryBanner(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not save pitch";
       toast.error(msg);
@@ -360,6 +381,35 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container py-10">
+        {recoveryBanner && (
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
+            <div className="flex items-center gap-2">
+              <HistoryIcon className="h-4 w-4 text-primary" />
+              <span>{recoveryBanner}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  clearDraft();
+                  setVersions([]);
+                  setActiveVersionId(null);
+                  setPitch(null);
+                  setPersonalizedFor(null);
+                  setForm({ title: "", description: "", details: "", links: "", industry: "SaaS", clientUrl: "" });
+                  setRecoveryBanner(null);
+                  toast.success("Draft cleared");
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Discard
+              </Button>
+              <Button size="sm" variant="glass" onClick={() => setRecoveryBanner(null)}>
+                <X className="h-3.5 w-3.5" /> Keep
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold">Your pitch studio</h1>
