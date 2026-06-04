@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bookmark, BookmarkCheck, Download, Globe, Link2, Lock, Star, Trash2, UserCircle2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Download, Globe, Link2, Lock, Star, Trash2, UserCircle2, UserSearch } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { PitchRow } from "@/services/community";
 import { setPitchShowAuthor } from "@/services/community";
 import { downloadPitchPdf } from "@/lib/pitchPdf";
@@ -85,6 +86,13 @@ const PitchCard = ({ pitch, rating, bookmarked, onTogglePublic, onRate, onBookma
       <div className="mt-1 flex flex-wrap gap-2">
         <Button size="sm" variant="glass" onClick={() => downloadPitchPdf(pitch.content)}><Download className="h-3 w-3" /> PDF</Button>
         <Button size="sm" variant="glass" onClick={copyShare}><Link2 className="h-3 w-3" /> Share</Button>
+        {pitch.show_author && pitch.user_id && (
+          <Button size="sm" variant="glass" asChild>
+            <Link to={`/u/${pitch.user_id}`} title="See the author and their other public pitches">
+              <UserSearch className="h-3 w-3" /> View profile
+            </Link>
+          </Button>
+        )}
         {ownerView && (
           <ExpiryControl pitchId={pitch.id} expiresAt={expiresAt} onChange={setExpiresAt} />
         )}

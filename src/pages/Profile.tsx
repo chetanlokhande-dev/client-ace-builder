@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "react-router-dom";
-import { UserSquare2, ShieldCheck, Sparkles, IdCard } from "lucide-react";
+import { Contact2, KeyRound, SlidersHorizontal } from "lucide-react";
 import {
   loadPersonality,
   savePersonality,
@@ -138,17 +138,17 @@ const Profile = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="identity" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="identity"><IdCard className="mr-1 h-3.5 w-3.5" /> Identity</TabsTrigger>
-            <TabsTrigger value="voice"><Sparkles className="mr-1 h-3.5 w-3.5" /> Voice & vibe</TabsTrigger>
-            <TabsTrigger value="public"><UserSquare2 className="mr-1 h-3.5 w-3.5" /> Public card</TabsTrigger>
-            <TabsTrigger value="security"><ShieldCheck className="mr-1 h-3.5 w-3.5" /> Sign-in</TabsTrigger>
+        <Tabs defaultValue="info" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="info"><Contact2 className="mr-1.5 h-3.5 w-3.5" /> Information</TabsTrigger>
+            <TabsTrigger value="security"><KeyRound className="mr-1.5 h-3.5 w-3.5" /> Security</TabsTrigger>
+            <TabsTrigger value="setup"><SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> Setup</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="identity" className="mt-6">
+          <TabsContent value="info" className="mt-6 space-y-6">
             <Card className="border-border/60 bg-gradient-card p-6 space-y-4">
-              <h2 className="font-display text-lg font-semibold">Display name</h2>
+              <h2 className="font-display text-lg font-semibold">Who you are</h2>
+              <p className="text-sm text-muted-foreground">The name shown to teammates and on pitches when you opt in.</p>
               <div className="space-y-2">
                 <Label htmlFor="fn">Full name</Label>
                 <Input id="fn" value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -157,57 +157,7 @@ const Profile = () => {
                 {savingName && <Loader2 className="h-4 w-4 animate-spin" />} Save
               </Button>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="voice" className="mt-6">
-            <Card className="border-border/60 bg-gradient-card p-6 space-y-4">
-              <div>
-                <h2 className="font-display text-lg font-semibold">Voice & vibe</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Teach the AI how you sound. These hints are blended into every new pitch generation (and the "Redesign in my voice" action on the studio).
-                </p>
-              </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="p-tone">Tone</Label>
-              <Input id="p-tone" placeholder="warm, direct, dry-witty" value={personality.tone ?? ""} onChange={updateP("tone")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="p-voice">Voice / persona</Label>
-              <Input id="p-voice" placeholder="confident expert, friendly partner" value={personality.voice ?? ""} onChange={updateP("voice")} />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="p-strengths">Strengths you want highlighted</Label>
-              <Textarea id="p-strengths" rows={2} placeholder="systems thinking, conversion copy, shipping fast under ambiguity" value={personality.strengths ?? ""} onChange={updateP("strengths")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="p-values">Values</Label>
-              <Textarea id="p-values" rows={2} placeholder="craft, candor, long-term thinking" value={personality.values ?? ""} onChange={updateP("values")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="p-style">Working style</Label>
-              <Textarea id="p-style" rows={2} placeholder="async-first, weekly demos, small focused sprints" value={personality.workingStyle ?? ""} onChange={updateP("workingStyle")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="p-comm">Communication style</Label>
-              <Textarea id="p-comm" rows={2} placeholder="short Loom updates, plain English, no jargon" value={personality.communication ?? ""} onChange={updateP("communication")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="p-sign">Signature phrases (optional)</Label>
-              <Textarea id="p-sign" rows={2} placeholder="'ship to learn', 'taste is the unfair advantage'" value={personality.signaturePhrases ?? ""} onChange={updateP("signaturePhrases")} />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="p-avoid">Things to avoid</Label>
-              <Textarea id="p-avoid" rows={2} placeholder="corporate clichés, emojis, the word 'synergy'" value={personality.avoid ?? ""} onChange={updateP("avoid")} />
-            </div>
-          </div>
-              <Button variant="hero" disabled={savingPersonality} onClick={handleSavePersonality}>
-                {savingPersonality && <Loader2 className="h-4 w-4 animate-spin" />} Save voice
-              </Button>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="public" className="mt-6 space-y-6">
             <Card className="border-border/60 bg-gradient-card p-6 space-y-4">
               <div>
                 <h2 className="font-display text-lg font-semibold">Public card</h2>
@@ -267,6 +217,54 @@ const Profile = () => {
               </div>
               <Button variant="hero" disabled={!currentPwd || newPwd.length < 6 || changingPwd} onClick={changePwd}>
                 {changingPwd && <Loader2 className="h-4 w-4 animate-spin" />} Update password
+              </Button>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="setup" className="mt-6">
+            <Card className="border-border/60 bg-gradient-card p-6 space-y-4">
+              <div>
+                <h2 className="font-display text-lg font-semibold">Pitch personality</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Teach the AI how you sound. These hints are blended into every new pitch generation (and the "Redesign in my voice" action on the studio).
+                </p>
+              </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="p-tone">Tone</Label>
+              <Input id="p-tone" placeholder="warm, direct, dry-witty" value={personality.tone ?? ""} onChange={updateP("tone")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-voice">Voice / persona</Label>
+              <Input id="p-voice" placeholder="confident expert, friendly partner" value={personality.voice ?? ""} onChange={updateP("voice")} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="p-strengths">Strengths you want highlighted</Label>
+              <Textarea id="p-strengths" rows={2} placeholder="systems thinking, conversion copy, shipping fast under ambiguity" value={personality.strengths ?? ""} onChange={updateP("strengths")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-values">Values</Label>
+              <Textarea id="p-values" rows={2} placeholder="craft, candor, long-term thinking" value={personality.values ?? ""} onChange={updateP("values")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-style">Working style</Label>
+              <Textarea id="p-style" rows={2} placeholder="async-first, weekly demos, small focused sprints" value={personality.workingStyle ?? ""} onChange={updateP("workingStyle")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-comm">Communication style</Label>
+              <Textarea id="p-comm" rows={2} placeholder="short Loom updates, plain English, no jargon" value={personality.communication ?? ""} onChange={updateP("communication")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="p-sign">Signature phrases (optional)</Label>
+              <Textarea id="p-sign" rows={2} placeholder="'ship to learn', 'taste is the unfair advantage'" value={personality.signaturePhrases ?? ""} onChange={updateP("signaturePhrases")} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="p-avoid">Things to avoid</Label>
+              <Textarea id="p-avoid" rows={2} placeholder="corporate clichés, emojis, the word 'synergy'" value={personality.avoid ?? ""} onChange={updateP("avoid")} />
+            </div>
+          </div>
+              <Button variant="hero" disabled={savingPersonality} onClick={handleSavePersonality}>
+                {savingPersonality && <Loader2 className="h-4 w-4 animate-spin" />} Save personality
               </Button>
             </Card>
           </TabsContent>
