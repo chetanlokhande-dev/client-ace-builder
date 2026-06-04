@@ -103,7 +103,10 @@ const Dashboard = () => {
 
   const [personality, setPersonality] = useState<Personality | null>(() => readCachedPersonality());
   const [usePersonality, setUsePersonality] = useState(true);
-  const [recoveryBanner, setRecoveryBanner] = useState<string | null>(null);
+  const [recovery, setRecovery] = useState<
+    | { reason: string; tip?: string; severity: "soft" | "strong"; hadPitch: boolean }
+    | null
+  >(null);
 
   // Restore draft from localStorage on first mount
   useEffect(() => {
@@ -119,7 +122,14 @@ const Dashboard = () => {
         if (d.personalizedFor) setPersonalizedFor(d.personalizedFor);
         if (Array.isArray(d.versions)) setVersions(d.versions);
         if (d.activeVersionId) setActiveVersionId(d.activeVersionId);
-        if (verdict.action === "offer") setRecoveryBanner(verdict.reason);
+        if (verdict.action === "offer") {
+          setRecovery({
+            reason: verdict.reason,
+            tip: verdict.tip,
+            severity: verdict.severity,
+            hadPitch: Boolean(d.pitch),
+          });
+        }
       }
     } catch {
       /* ignore */
@@ -138,7 +148,13 @@ const Dashboard = () => {
         DRAFT_KEY,
         JSON.stringify({ form, pitch, personalizedFor, versions, activeVersionId } satisfies Draft),
       );
-      draftMeta.patch({ lastEdit: Date.now(), createdAt: draftMeta.read().createdAt ?? Date.now() });
+      const prev = draftMeta.read();
+      draftMeta.patch({
+        lastEdit: Date.now(),
+        createdAt: prev.createdAt ?? Date.now(),
+        editCount: (prev.editCount ?? 0) + 1,
+        hadPitch: Boolean(pitch),
+      });
     } catch {
       /* ignore */
     }
@@ -312,7 +328,7 @@ const Dashboard = () => {
       setActiveVersionId(null);
       setPitch(null);
       setForm({ title: "", description: "", details: "", links: "", industry: "SaaS", clientUrl: "" });
-      setRecoveryBanner(null);
+      setRecovery(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not save pitch";
       toast.error(msg);
@@ -381,13 +397,24 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container py-10">
-        {recoveryBanner && (
-          <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
-            <div className="flex items-center gap-2">
-              <HistoryIcon className="h-4 w-4 text-primary" />
-              <span>{recoveryBanner}</span>
+        {recovery && (
+          <div
+            className={`mb-6 flex flex-col gap-3 rounded-xl border px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between ${
+              recovery.severity === "strong"
+                ? "border-primary/50 bg-primary/15"
+                : "border-border/60 bg-secondary/40"
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <HistoryIcon className="mt-0.5 h-4 w-4 text-primary" />
+              <div>
+                <div className="font-medium">{recovery.reason}</div>
+                {recovery.tip && (
+                  <p className="text-xs text-muted-foreground">{recovery.tip}</p>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 size="sm"
                 variant="ghost"
@@ -398,14 +425,26 @@ const Dashboard = () => {
                   setPitch(null);
                   setPersonalizedFor(null);
                   setForm({ title: "", description: "", details: "", links: "", industry: "SaaS", clientUrl: "" });
-                  setRecoveryBanner(null);
-                  toast.success("Draft cleared");
+                  setRecovery(null);
+                  toast.success("Started fresh");
                 }}
               >
-                <Trash2 className="h-3.5 w-3.5" /> Discard
+                <Trash2 className="h-3.5 w-3.5" /> Start fresh
               </Button>
-              <Button size="sm" variant="glass" onClick={() => setRecoveryBanner(null)}>
-                <X className="h-3.5 w-3.5" /> Keep
+              {recovery.hadPitch && user && (
+                <Button
+                  size="sm"
+                  variant="glass"
+                  onClick={() => {
+                    setRecovery(null);
+                    handleSave();
+                  }}
+                >
+                  <Save className="h-3.5 w-3.5" /> Save now
+                </Button>
+              )}
+              <Button size="sm" variant="hero" onClick={() => setRecovery(null)}>
+                <X className="h-3.5 w-3.5" /> Restore & continue
               </Button>
             </div>
           </div>
