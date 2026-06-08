@@ -52,7 +52,6 @@ export const RouteTransition = ({ children }: { children: React.ReactNode }) => 
         }}
       />
       <div
-        key={prevKey.current}
         className={
           stage === "in"
             ? "animate-route-in motion-reduce:animate-none"
