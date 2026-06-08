@@ -412,6 +412,11 @@ const Dashboard = () => {
                 {recovery.tip && (
                   <p className="text-xs text-muted-foreground">{recovery.tip}</p>
                 )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {recovery.hadPitch
+                    ? "Restoring will bring back your generated pitch and form data. Starting fresh will discard everything."
+                    : "Restoring will bring back your form entries. Starting fresh will clear them."}
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
