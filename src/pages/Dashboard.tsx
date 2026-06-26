@@ -24,7 +24,7 @@ import {
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import PitchAssistant from "@/components/pitchforge/PitchAssistant";
 import { Clock, Copy, Download, History as HistoryIcon, Loader2, Save, Share2, Sparkles, Trash2 } from "lucide-react";
-import { UserCog, Wand2, X } from "lucide-react";
+import { ChevronDown, UserCog, Wand2, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   hasPersonality,
