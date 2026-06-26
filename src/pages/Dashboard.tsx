@@ -107,6 +107,8 @@ const Dashboard = () => {
     | { reason: string; tip?: string; severity: "soft" | "strong"; hadPitch: boolean }
     | null
   >(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
 
   // Restore draft from localStorage on first mount
   useEffect(() => {
