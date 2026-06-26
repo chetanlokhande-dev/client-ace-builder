@@ -73,7 +73,8 @@ export default {
         elegant: "var(--shadow-elegant)",
       },
       fontFamily: {
-        display: ["Inter", "ui-sans-serif", "system-ui"],
+        display: ["Sora", "ui-sans-serif", "system-ui"],
+        sans: ["Manrope", "ui-sans-serif", "system-ui"],
       },
       keyframes: {
         "accordion-down": {

@@ -1,5 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import logoMark from "@/assets/pitchforge-mark.png";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,19 +22,26 @@ const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-semibold">
-          <img src={logoMark} alt="PitchForge logo" width={32} height={32} className="h-8 w-8 object-contain" />
+        <Link to="/" className="flex items-center gap-2 font-display text-base font-semibold tracking-tight">
+          <img src={logoMark} alt="PitchForge logo" width={28} height={28} className="h-7 w-7 object-contain" />
           PitchForge
         </Link>
-        <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
+        <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
           {user ? (
             <>
               <Link to="/dashboard" className="hover:text-foreground transition-colors">Studio</Link>
-              <Link to="/history" className="hover:text-foreground transition-colors">History</Link>
-              <Link to="/saved" className="hover:text-foreground transition-colors">Saved</Link>
+              <Link to="/saved" className="hover:text-foreground transition-colors">Library</Link>
               <Link to="/community" className="hover:text-foreground transition-colors">Community</Link>
-              <Link to="/communities" className="hover:text-foreground transition-colors">Groups</Link>
-              <Link to="/profile" className="hover:text-foreground transition-colors">Profile</Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 hover:text-foreground transition-colors outline-none">
+                  More <ChevronDown className="h-3.5 w-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={() => navigate("/history")}>History</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/communities")}>Groups</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>

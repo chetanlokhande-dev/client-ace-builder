@@ -24,7 +24,7 @@ import {
 import PitchPreview, { type PitchData } from "@/components/pitchforge/PitchPreview";
 import PitchAssistant from "@/components/pitchforge/PitchAssistant";
 import { Clock, Copy, Download, History as HistoryIcon, Loader2, Save, Share2, Sparkles, Trash2 } from "lucide-react";
-import { UserCog, Wand2, X } from "lucide-react";
+import { ChevronDown, UserCog, Wand2, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   hasPersonality,
@@ -107,6 +107,8 @@ const Dashboard = () => {
     | { reason: string; tip?: string; severity: "soft" | "strong"; hadPitch: boolean }
     | null
   >(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
 
   // Restore draft from localStorage on first mount
   useEffect(() => {
@@ -456,55 +458,39 @@ const Dashboard = () => {
         )}
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold">Your pitch studio</h1>
-            <p className="mt-1 text-muted-foreground">Describe your portfolio, pick an industry, and generate.</p>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">Pitch studio</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Describe your work. Generate. Send.</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="hero" disabled={!pitch || saving} onClick={handleSave}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {user ? "Save pitch" : "Sign in to save"}
-            </Button>
-            <Button variant="glass" disabled={!pitch} onClick={handleDownload}> <Download className="h-4 w-4" /> Download PDF</Button>
-            <Button variant="glass" disabled={!pitch} onClick={handleShare}> <Share2 className="h-4 w-4" /> Share link</Button>
-          </div>
+          {pitch && (
+            <div className="flex gap-2">
+              <Button variant="hero" disabled={saving} onClick={handleSave}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {user ? "Save" : "Sign in to save"}
+              </Button>
+              <Button variant="glass" onClick={handleDownload} aria-label="Download PDF"> <Download className="h-4 w-4" /></Button>
+              <Button variant="glass" onClick={handleShare} aria-label="Share link"> <Share2 className="h-4 w-4" /></Button>
+            </div>
+          )}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[400px_1fr]">
           {/* Form */}
           <Card className="h-fit border-border/60 bg-gradient-card p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold">Portfolio details</h2>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Portfolio title</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input id="title" placeholder="Senior product designer" value={form.title} onChange={update("title")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Short description</Label>
-                <Input id="description" placeholder="I help teams design and ship beautiful products." value={form.description} onChange={update("description")} />
+                <Input id="description" placeholder="I help teams ship beautiful products." value={form.description} onChange={update("description")} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="details">Project details</Label>
                 <Textarea id="details" rows={5} placeholder="Briefly describe 2–3 relevant projects, outcomes and your role." value={form.details} onChange={update("details")} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="links">Links (optional)</Label>
-                <Input id="links" placeholder="https://yourportfolio.com" value={form.links} onChange={update("links")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="clientUrl">Client website (optional)</Label>
-                <Input
-                  id="clientUrl"
-                  type="url"
-                  placeholder="https://acme.com"
-                  value={form.clientUrl}
-                  onChange={update("clientUrl")}
-                />
-                <p className="text-xs text-muted-foreground">
-                  We'll scan the site and tailor the pitch to their business.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label>Client industry</Label>
+                <Label>Industry</Label>
                 <Select value={form.industry} onValueChange={(v) => setForm({ ...form, industry: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -514,72 +500,97 @@ const Dashboard = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAdvanced((s) => !s)}
+                className="flex w-full items-center justify-between rounded-md px-1 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span>Advanced — links, client website, voice</span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+              </button>
+              {showAdvanced && (
+                <div className="space-y-4 rounded-lg border border-border/60 bg-secondary/20 p-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="links" className="text-xs">Your links</Label>
+                    <Input id="links" placeholder="https://yourportfolio.com" value={form.links} onChange={update("links")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="clientUrl" className="text-xs">Client website</Label>
+                    <Input
+                      id="clientUrl"
+                      type="url"
+                      placeholder="https://acme.com"
+                      value={form.clientUrl}
+                      onChange={update("clientUrl")}
+                    />
+                    <p className="text-[11px] text-muted-foreground">We'll scan the site and tailor the pitch.</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-background/40 px-3 py-2">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <UserCog className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium">Write in my voice</div>
+                        <p className="truncate text-[11px] text-muted-foreground">
+                          {hasPersonality(personality) ? "Tone & values applied." : "Set up in Profile."}
+                        </p>
+                      </div>
+                    </div>
+                    {hasPersonality(personality) ? (
+                      <Switch
+                        checked={usePersonality}
+                        onCheckedChange={setUsePersonality}
+                        aria-label="Use my personality"
+                      />
+                    ) : (
+                      <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => navigate("/profile")}>
+                        Set up →
+                      </Button>
+                    )}
+                  </div>
+                  {hasPersonality(personality) && pitch && (
+                    <Button
+                      type="button"
+                      variant="glass"
+                      size="sm"
+                      className="w-full"
+                      disabled={loading}
+                      onClick={handleRedesignWithPersonality}
+                    >
+                      <Wand2 className="h-3.5 w-3.5" /> Redesign in my voice
+                    </Button>
+                  )}
+                </div>
+              )}
+
               <Button onClick={handleGenerate} variant="hero" size="lg" className="w-full" disabled={loading}>
                 {loading ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Crafting your pitch…</>
                 ) : (
-                  <><Sparkles className="h-4 w-4" /> Generate AI pitch</>
+                  <><Sparkles className="h-4 w-4" /> Generate pitch</>
                 )}
               </Button>
-
-              <div className="rounded-lg border border-border/60 bg-secondary/30 p-3 text-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2">
-                    <UserCog className="mt-0.5 h-4 w-4 text-primary" />
-                    <div>
-                      <div className="font-medium">Write in my personality</div>
-                      <p className="text-xs text-muted-foreground">
-                        {hasPersonality(personality)
-                          ? "Blend your tone, voice, and values into every pitch."
-                          : "Add your personality in Profile to unlock."}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={usePersonality && hasPersonality(personality)}
-                    onCheckedChange={setUsePersonality}
-                    disabled={!hasPersonality(personality)}
-                    aria-label="Use my personality"
-                  />
-                </div>
-                {!hasPersonality(personality) ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="mt-2 h-7 px-2 text-xs"
-                    onClick={() => navigate("/profile")}
-                  >
-                    Set up personality →
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="glass"
-                    size="sm"
-                    className="mt-3 w-full"
-                    disabled={!pitch || loading}
-                    onClick={handleRedesignWithPersonality}
-                  >
-                    <Wand2 className="h-3.5 w-3.5" /> Redesign current pitch in my voice
-                  </Button>
-                )}
-              </div>
             </div>
           </Card>
 
           {/* Preview */}
           <div>
             {versions.length > 0 && (
-              <Card className="mb-3 border-border/60 bg-gradient-card p-4">
-                <div className="mb-2 flex items-center gap-2">
+              <Card className="mb-3 border-border/60 bg-gradient-card p-3">
+                <button
+                  type="button"
+                  onClick={() => setShowVersions((s) => !s)}
+                  className="flex w-full items-center gap-2 text-left"
+                >
                   <HistoryIcon className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-semibold">Draft versions</h3>
-                  <span className="text-xs text-muted-foreground">
-                    {versions.length} {versions.length === 1 ? "draft" : "drafts"} · auto-saved in this browser
+                  <span className="text-sm font-medium">
+                    {versions.length} {versions.length === 1 ? "draft" : "drafts"}
                   </span>
-                </div>
-                <ul className="space-y-1.5">
+                  <span className="text-xs text-muted-foreground">auto-saved</span>
+                  <ChevronDown className={`ml-auto h-4 w-4 text-muted-foreground transition-transform ${showVersions ? "rotate-180" : ""}`} />
+                </button>
+                {showVersions && (
+                <ul className="mt-3 space-y-1.5">
                   {versions.map((v, idx) => {
                     const isActive = v.id === activeVersionId;
                     return (
@@ -621,6 +632,7 @@ const Dashboard = () => {
                     );
                   })}
                 </ul>
+                )}
               </Card>
             )}
             {personalizedFor && pitch && (
