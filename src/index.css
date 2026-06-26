@@ -8,43 +8,43 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* PitchForge — dark-first SaaS theme */
-    --background: 232 35% 6%;
+    /* PitchForge — Midnight Indigo */
+    --background: 240 45% 7%;       /* #0a0a1a */
     --foreground: 220 30% 96%;
 
-    --card: 231 30% 9%;
+    --card: 240 43% 11%;            /* slightly lifted */
     --card-foreground: 220 30% 96%;
 
-    --popover: 231 30% 9%;
+    --popover: 240 43% 11%;
     --popover-foreground: 220 30% 96%;
 
-    --primary: 244 90% 66%;
+    --primary: 244 75% 59%;         /* #4f46e5 */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 268 92% 70%;
+    --primary-glow: 244 85% 70%;
 
-    --secondary: 231 25% 14%;
+    --secondary: 240 43% 14%;       /* #141432 */
     --secondary-foreground: 220 30% 96%;
 
-    --muted: 231 22% 13%;
-    --muted-foreground: 220 14% 64%;
+    --muted: 240 35% 13%;
+    --muted-foreground: 220 14% 68%;
 
-    --accent: 268 92% 70%;
+    --accent: 240 51% 24%;          /* #1e1e5a */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 231 22% 17%;
-    --input: 231 22% 15%;
-    --ring: 244 90% 66%;
+    --border: 240 30% 18%;
+    --input: 240 30% 15%;
+    --ring: 244 75% 59%;
 
     --radius: 0.85rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(244 90% 66%), hsl(268 92% 70%));
-    --gradient-hero: radial-gradient(60% 50% at 50% 0%, hsl(244 90% 66% / 0.35) 0%, transparent 70%), linear-gradient(180deg, hsl(232 40% 8%), hsl(232 35% 6%));
-    --gradient-card: linear-gradient(160deg, hsl(231 30% 11% / 0.9), hsl(231 30% 8% / 0.9));
-    --shadow-glow: 0 20px 60px -20px hsl(244 90% 66% / 0.5);
-    --shadow-elegant: 0 10px 40px -12px hsl(232 60% 2% / 0.6);
+    --gradient-primary: linear-gradient(135deg, hsl(244 75% 59%), hsl(244 85% 70%));
+    --gradient-hero: radial-gradient(55% 45% at 50% 0%, hsl(244 75% 59% / 0.28) 0%, transparent 70%), linear-gradient(180deg, hsl(240 45% 9%), hsl(240 45% 6%));
+    --gradient-card: linear-gradient(160deg, hsl(240 43% 12% / 0.9), hsl(240 45% 8% / 0.9));
+    --shadow-glow: 0 20px 60px -20px hsl(244 75% 59% / 0.45);
+    --shadow-elegant: 0 10px 40px -12px hsl(240 60% 2% / 0.6);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
@@ -109,6 +109,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
